@@ -1,0 +1,13 @@
+DROP TYPE user_role;
+
+DROP TABLE IF EXISTS users;
+
+DROP TABLE IF EXISTS posts;
+
+DROP TABLE IF EXISTS categories;
+
+DROP TABLE IF EXISTS tags;
+
+DROP TABLE IF EXISTS post_tags;
+
+DROP TABLE IF EXISTS comments;

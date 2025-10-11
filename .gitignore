@@ -1,0 +1,12 @@
+
+
+
+__requirement
+tmp
+.air.toml
+internal/domains
+internal/repositories
+internal/usecases
+internal/handlers
+
+dev.env

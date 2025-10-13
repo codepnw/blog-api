@@ -17,7 +17,7 @@ func NewPostHandler(uc postusecase.Usecase) *handler {
 }
 
 func (h *handler) Create(ctx *fiber.Ctx) error {
-	req := new(PostCreate)
+	req := new(PostCreateReq)
 	if err := ctx.BodyParser(req); err != nil {
 		return handlers.BadRequest(ctx, err.Error())
 	}
@@ -27,10 +27,10 @@ func (h *handler) Create(ctx *fiber.Ctx) error {
 
 	input := &postdomain.Post{
 		// TODO: Get AuthorID From Context Later
-		AuthorID:   "",
+		AuthorID:   "a9bbad43-51e5-424c-8ec5-5f40cd89b701",
 		Title:      req.Title,
-		Content:    *req.Content,
-		CategoryID: *req.CategoryID,
+		Content:    req.Content,
+		CategoryID: &req.CategoryID,
 	}
 
 	result, err := h.uc.Create(ctx.Context(), input)
@@ -42,7 +42,7 @@ func (h *handler) Create(ctx *fiber.Ctx) error {
 }
 
 func (h *handler) GetByID(ctx *fiber.Ctx) error {
-	postID := ctx.Params("post_id")
+	postID := ctx.Params(handlers.ParamKeyPostID)
 
 	result, err := h.uc.GetByID(ctx.Context(), postID)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *handler) GetByID(ctx *fiber.Ctx) error {
 }
 
 func (h *handler) GetByAuthorID(ctx *fiber.Ctx) error {
-	authorID := ctx.Query("author_id")
+	authorID := ctx.Params(handlers.ParamKeyAuthorID)
 
 	result, err := h.uc.GetByAuthorID(ctx.Context(), authorID)
 	if err != nil {
@@ -73,9 +73,9 @@ func (h *handler) GetAll(ctx *fiber.Ctx) error {
 }
 
 func (h *handler) Update(ctx *fiber.Ctx) error {
-	postID := ctx.Params("post_id")
+	postID := ctx.Params(handlers.ParamKeyPostID)
 
-	req := new(PostUpdate)
+	req := new(PostUpdateReq)
 	if err := ctx.BodyParser(req); err != nil {
 		return handlers.BadRequest(ctx, err.Error())
 	}
@@ -83,12 +83,18 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 		return handlers.BadRequest(ctx, err.Error())
 	}
 
-	input := &postdomain.Post{
-		ID:         postID,
-		Title:      *req.Title,
-		Content:    *req.Content,
-		CategoryID: *req.CategoryID,
+	input := new(postdomain.Post)
+	if req.Title != nil {
+		input.Title = *req.Title
 	}
+	if req.Content != nil {
+		input.Content = *req.Content
+	}
+	if req.CategoryID != nil {
+		input.CategoryID = req.CategoryID
+	}
+	input.ID = postID
+
 	result, err := h.uc.Update(ctx.Context(), input)
 	if err != nil {
 		return handlers.InternalServerError(ctx, err)
@@ -98,7 +104,7 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 }
 
 func (h *handler) Delete(ctx *fiber.Ctx) error {
-	postID := ctx.Params("post_id")
+	postID := ctx.Params(handlers.ParamKeyPostID)
 
 	if err := h.uc.Delete(ctx.Context(), postID); err != nil {
 		return handlers.InternalServerError(ctx, err)

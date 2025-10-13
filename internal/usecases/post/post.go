@@ -2,7 +2,6 @@ package postusecase
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	postdomain "github.com/codepnw/blog-api/internal/domains/post"
@@ -64,9 +63,10 @@ func (u *usecase) Update(ctx context.Context, input *postdomain.Post) (*postdoma
 	if err != nil {
 		return nil, err
 	}
-	if existing.AuthorID != input.AuthorID {
-		return nil, errors.New("unauthorized to update this post")
-	}
+	// if existing.AuthorID != input.AuthorID {
+	// 	return nil, errors.New("unauthorized to update this post")
+	// }
+	_ = existing
 
 	return u.repo.Update(ctx, input)
 }

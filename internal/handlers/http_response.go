@@ -30,6 +30,6 @@ func BadRequest(ctx *fiber.Ctx, message string) error {
 
 func InternalServerError(ctx *fiber.Ctx, err error) error {
 	return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
-		"error": err,
+		"error": err.Error(),
 	})
 }

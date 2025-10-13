@@ -7,7 +7,7 @@ type Post struct {
 	AuthorID   string
 	Title      string
 	Content    string
-	CategoryID string
+	CategoryID *string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 }

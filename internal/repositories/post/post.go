@@ -3,13 +3,12 @@ package postrepo
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	postdomain "github.com/codepnw/blog-api/internal/domains/post"
+	"github.com/codepnw/blog-api/internal/utils/errs"
 )
 
 type postModel struct {
@@ -17,7 +16,7 @@ type postModel struct {
 	AuthorID   string    `db:"author_id"`
 	Title      string    `db:"title"`
 	Content    string    `db:"content"`
-	CategoryID string    `db:"category_id"`
+	CategoryID *string   `db:"category_id"`
 	CreatedAt  time.Time `db:"created_at"`
 	UpdatedAt  time.Time `db:"updated_at"`
 }
@@ -41,6 +40,9 @@ func NewPostRepository(db *sql.DB) Repository {
 
 func (r *repository) Insert(ctx context.Context, input *postdomain.Post) (*postdomain.Post, error) {
 	m := r.inputToModel(input)
+	// Fixed CategoryID (UUID Type) is empty
+	categoryID := r.validateCategoryID(m.CategoryID)
+
 	query := `
 		INSERT INTO posts (author_id, title, content, category_id)
 		VALUES ($1, $2, $3, $4)
@@ -52,7 +54,7 @@ func (r *repository) Insert(ctx context.Context, input *postdomain.Post) (*postd
 		m.AuthorID,
 		m.Title,
 		m.Content,
-		m.CategoryID,
+		categoryID,
 	).Scan(&m.ID, &m.CreatedAt, &m.UpdatedAt)
 
 	if err != nil {
@@ -65,7 +67,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (*postdomain.Post,
 	post := new(postdomain.Post)
 	query := `
 		SELECT id, author_id, title, content, category_id, created_at, updated_at
-		WHERE id = $1 LIMIT 1
+		FROM posts WHERE id = $1 LIMIT 1
 	`
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&post.ID,
@@ -77,6 +79,9 @@ func (r *repository) FindByID(ctx context.Context, id string) (*postdomain.Post,
 		&post.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.ErrPostNotFound
+		}
 		return nil, err
 	}
 	return post, nil
@@ -85,7 +90,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (*postdomain.Post,
 func (r *repository) FindByAuthorID(ctx context.Context, authorID string) ([]*postdomain.Post, error) {
 	query := `
 		SELECT id, author_id, title, content, category_id, created_at, updated_at
-		WHERE author_id = $1
+		FROM posts WHERE author_id = $1
 	`
 	rows, err := r.db.QueryContext(ctx, query, authorID)
 	if err != nil {
@@ -116,6 +121,7 @@ func (r *repository) FindByAuthorID(ctx context.Context, authorID string) ([]*po
 func (r *repository) List(ctx context.Context) ([]*postdomain.Post, error) {
 	query := `
 		SELECT id, author_id, title, content, category_id, created_at, updated_at
+		FROM posts
 	`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -153,19 +159,19 @@ func (r *repository) Update(ctx context.Context, input *postdomain.Post) (*postd
 	sb.WriteString("UPDATE posts SET ")
 
 	if input.Title != "" {
-		sb.WriteString(fmt.Sprintf("title = $%d", idx))
+		sb.WriteString(fmt.Sprintf("title = $%d,", idx))
 		args = append(args, input.Title)
 		idx++
 	}
 
 	if input.Content != "" {
-		sb.WriteString(fmt.Sprintf("content = $%d", idx))
+		sb.WriteString(fmt.Sprintf("content = $%d,", idx))
 		args = append(args, input.Content)
 		idx++
 	}
 
-	if input.CategoryID != "" {
-		sb.WriteString(fmt.Sprintf("category_id = $%d", idx))
+	if input.CategoryID != nil {
+		sb.WriteString(fmt.Sprintf("category_id = $%d,", idx))
 		args = append(args, input.CategoryID)
 		idx++
 	}
@@ -180,8 +186,7 @@ func (r *repository) Update(ctx context.Context, input *postdomain.Post) (*postd
 	args = append(args, input.ID)
 
 	query := sb.String()
-	m := new(postModel)
-	log.Println(query)
+	m := r.inputToModel(input)
 
 	err := r.db.QueryRowContext(ctx, query, args...).Scan(
 		&m.ID,
@@ -193,6 +198,9 @@ func (r *repository) Update(ctx context.Context, input *postdomain.Post) (*postd
 		&m.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.ErrPostNotFound
+		}
 		return nil, err
 	}
 
@@ -211,7 +219,7 @@ func (r *repository) Delete(ctx context.Context, id string) error {
 	}
 
 	if rows == 0 {
-		return errors.New("post not found")
+		return errs.ErrPostNotFound
 	}
 	return nil
 }
@@ -238,4 +246,13 @@ func (r *repository) modelToDomain(input *postModel) *postdomain.Post {
 		CreatedAt:  input.CreatedAt,
 		UpdatedAt:  input.UpdatedAt,
 	}
+}
+
+func (r *repository) validateCategoryID(catID *string) (categoryID any) {
+	if catID != nil && *catID != "" {
+		categoryID = catID
+	} else {
+		categoryID = nil
+	}
+	return
 }

@@ -38,6 +38,7 @@ func Run(envPath string) error {
 	// Init Routes
 	r.CategoryRoutes()
 	r.PostRoutes()
+	r.UserRoutes()
 
 	return app.Listen(fmt.Sprintf(":%d", cfg.APP.Port))
 }

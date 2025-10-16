@@ -7,6 +7,7 @@ import (
 	userrepo "github.com/codepnw/blog-api/internal/repositories/user"
 	"github.com/codepnw/blog-api/internal/usecases"
 	"github.com/codepnw/blog-api/internal/utils/errs"
+	jwttoken "github.com/codepnw/blog-api/internal/utils/jwt"
 	"github.com/codepnw/blog-api/internal/utils/password"
 )
 
@@ -23,14 +24,22 @@ type Usecase interface {
 	GetAllUsers(ctx context.Context) ([]*userdomain.User, error)
 	UpdateUser(ctx context.Context, input *userdomain.User) (*userdomain.User, error)
 	DeleteUser(ctx context.Context, id string) error
+
+	// Auth
+	Register(ctx context.Context, input *userdomain.User) (*AuthResponse, error)
+	Login(ctx context.Context, input *userdomain.User) (*AuthResponse, error)
 }
 
 type usecase struct {
-	repo userrepo.Repository
+	repo  userrepo.Repository
+	token *jwttoken.JWTToken
 }
 
-func NewUserUsecase(repo userrepo.Repository) Usecase {
-	return &usecase{repo: repo}
+func NewUserUsecase(repo userrepo.Repository, token *jwttoken.JWTToken) Usecase {
+	return &usecase{
+		repo:  repo,
+		token: token,
+	}
 }
 
 func (u *usecase) CreateUser(ctx context.Context, input *userdomain.User) (*userdomain.User, error) {
@@ -82,4 +91,60 @@ func (u *usecase) DeleteUser(ctx context.Context, id string) error {
 	defer cancel()
 
 	return u.repo.Delete(ctx, id)
+}
+
+//  ------- Auth -----------
+
+type AuthResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (u *usecase) Register(ctx context.Context, input *userdomain.User) (*AuthResponse, error) {
+	user, err := u.CreateUser(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := u.tokenResponse(user)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (u *usecase) Login(ctx context.Context, input *userdomain.User) (*AuthResponse, error) {
+	user, err := u.repo.FindByEmail(ctx, input.Email)
+	if err != nil {
+		return nil, errs.ErrUserInvalid
+	}
+
+	ok := password.VerifyPassword(input.PasswordHash, user.PasswordHash)
+	if !ok {
+		return nil, errs.ErrUserInvalid
+	}
+
+	response, err := u.tokenResponse(user)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
+func (u *usecase) tokenResponse(user *userdomain.User) (*AuthResponse, error) {
+	accessToken, err := u.token.GenerateAccessToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := u.token.GenerateRefreshToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	response := new(AuthResponse)
+	response.AccessToken = accessToken
+	response.RefreshToken = refreshToken
+
+	return response, nil
 }

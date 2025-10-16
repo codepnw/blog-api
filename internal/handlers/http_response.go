@@ -28,6 +28,18 @@ func BadRequest(ctx *fiber.Ctx, message string) error {
 	})
 }
 
+func Unauthorized(ctx *fiber.Ctx, message string) error {
+	return ctx.Status(http.StatusUnauthorized).JSON(&fiber.Map{
+		"message": message,
+	})
+}
+
+func Forbidden(ctx *fiber.Ctx, message string) error {
+	return ctx.Status(http.StatusForbidden).JSON(&fiber.Map{
+		"message": message,
+	})
+}
+
 func InternalServerError(ctx *fiber.Ctx, err error) error {
 	return ctx.Status(http.StatusInternalServerError).JSON(&fiber.Map{
 		"error": err.Error(),

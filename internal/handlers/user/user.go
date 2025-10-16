@@ -3,6 +3,7 @@ package userhandler
 import (
 	userdomain "github.com/codepnw/blog-api/internal/domains/user"
 	"github.com/codepnw/blog-api/internal/handlers"
+	"github.com/codepnw/blog-api/internal/middleware"
 	userusecase "github.com/codepnw/blog-api/internal/usecases/user"
 	"github.com/codepnw/blog-api/internal/utils/validate"
 	"github.com/gofiber/fiber/v2"
@@ -43,6 +44,20 @@ func (h *handler) GetUser(ctx *fiber.Ctx) error {
 	id := ctx.Params(handlers.ParamKeyUserID)
 
 	result, err := h.uc.GetUser(ctx.Context(), id)
+	if err != nil {
+		return handlers.InternalServerError(ctx, err)
+	}
+
+	return handlers.Success(ctx, result)
+}
+
+func (h *handler) GetProfile(ctx *fiber.Ctx) error {
+	user, err := middleware.GetCurrentUser(ctx)
+	if err != nil {
+		return handlers.Unauthorized(ctx, err.Error())
+	}
+
+	result, err := h.uc.GetUser(ctx.Context(), user.ID)
 	if err != nil {
 		return handlers.InternalServerError(ctx, err)
 	}
@@ -94,4 +109,50 @@ func (h *handler) DeleteUser(ctx *fiber.Ctx) error {
 		return handlers.InternalServerError(ctx, err)
 	}
 	return handlers.NoContent(ctx)
+}
+
+// ---- Auth ------
+
+func (h *handler) Register(ctx *fiber.Ctx) error {
+	req := new(UserCreateReq)
+	if err := ctx.BodyParser(req); err != nil {
+		return handlers.BadRequest(ctx, err.Error())
+	}
+	if err := validate.Struct(req); err != nil {
+		return handlers.BadRequest(ctx, err.Error())
+	}
+
+	input := &userdomain.User{
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Email:        req.Email,
+		PasswordHash: req.Password,
+	}
+	response, err := h.uc.Register(ctx.Context(), input)
+	if err != nil {
+		return handlers.InternalServerError(ctx, err)
+	}
+
+	return handlers.Created(ctx, response)
+}
+
+func (h *handler) Login(ctx *fiber.Ctx) error {
+	req := new(UserLoginReq)
+	if err := ctx.BodyParser(req); err != nil {
+		return handlers.BadRequest(ctx, err.Error())
+	}
+	if err := validate.Struct(req); err != nil {
+		return handlers.BadRequest(ctx, err.Error())
+	}
+
+	input := &userdomain.User{
+		Email:        req.Email,
+		PasswordHash: req.Password,
+	}
+	response, err := h.uc.Login(ctx.Context(), input)
+	if err != nil {
+		return handlers.InternalServerError(ctx, err)
+	}
+
+	return handlers.Success(ctx, response)
 }

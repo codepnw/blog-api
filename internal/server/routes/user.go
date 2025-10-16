@@ -11,15 +11,25 @@ import (
 
 func (cfg *RouteConfig) UserRoutes() {
 	repo := userrepo.NewUserRepository(cfg.DB)
-	uc := userusecase.NewUserUsecase(repo)
+	uc := userusecase.NewUserUsecase(repo, cfg.Token)
 	handler := userhandler.NewUserHandler(uc)
 
-	r := cfg.APP.Group(cfg.Prefix + "/users")
+	// Public
+	public := cfg.APP.Group(cfg.Prefix + "/auth")
+	public.Post("/register", handler.Register)
+	public.Post("/login", handler.Login)
+
+	// Private
+	private := cfg.APP.Group(cfg.Prefix+"/users", cfg.Mid.Authorized())
+	private.Get("/me", handler.GetProfile)
+
+	// Admin Only
+	admin := cfg.APP.Group(cfg.Prefix+"/users", cfg.Mid.Authorized(), cfg.Mid.RoleRequired(string(userusecase.RoleAdmin)))
 	userID := fmt.Sprintf("/:%s", handlers.ParamKeyUserID)
 
-	r.Post("/", handler.CreateUser)
-	r.Get("/", handler.GetAllUsers)
-	r.Get(userID, handler.GetUser)
-	r.Patch(userID, handler.UpdateUser)
-	r.Delete(userID, handler.DeleteUser)
+	admin.Post("/", handler.CreateUser)
+	admin.Get("/", handler.GetAllUsers)
+	admin.Get(userID, handler.GetUser)
+	admin.Patch(userID, handler.UpdateUser)
+	admin.Delete(userID, handler.DeleteUser)
 }

@@ -25,6 +25,7 @@ type UserModel struct {
 type Repository interface {
 	Insert(ctx context.Context, input *userdomain.User) (*userdomain.User, error)
 	FindByID(ctx context.Context, id string) (*userdomain.User, error)
+	FindByEmail(ctx context.Context, id string) (*userdomain.User, error)
 	List(ctx context.Context) ([]*userdomain.User, error)
 	Update(ctx context.Context, input *userdomain.User) (*userdomain.User, error)
 	Delete(ctx context.Context, id string) error
@@ -72,6 +73,31 @@ func (r *repository) FindByID(ctx context.Context, id string) (*userdomain.User,
 		&m.FirstName,
 		&m.LastName,
 		&m.Email,
+		&m.Role,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.ErrUserNotFound
+		}
+		return nil, err
+	}
+	return r.modelToDomain(m), nil
+}
+
+func (r *repository) FindByEmail(ctx context.Context, email string) (*userdomain.User, error) {
+	m := new(UserModel)
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, role, created_at, updated_at
+		FROM users WHERE email = $1 LIMIT 1
+	`
+	err := r.db.QueryRowContext(ctx, query, email).Scan(
+		&m.ID,
+		&m.FirstName,
+		&m.LastName,
+		&m.Email,
+		&m.PasswordHash,
 		&m.Role,
 		&m.CreatedAt,
 		&m.UpdatedAt,

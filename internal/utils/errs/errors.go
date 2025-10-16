@@ -11,4 +11,5 @@ var (
 var (
 	ErrUserNotFound     = errors.New("user not found")
 	ErrUserUnauthorized = errors.New("unauthorized to update user")
+	ErrUserInvalid      = errors.New("invalid email or password")
 )

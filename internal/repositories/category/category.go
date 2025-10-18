@@ -28,7 +28,7 @@ func NewCategoryRepository(db *sql.DB) Repository {
 
 func (r *repository) Insert(ctx context.Context, input *categorydomain.Category) error {
 	query := `
-		INSERT INTO categories (name, description) 
+		INSERT INTO categories (name, description)
 		VALUES ($1, $2)
 	`
 	_, err := r.db.ExecContext(ctx, query, input.Name, input.Description)
@@ -39,7 +39,7 @@ func (r *repository) FindByID(ctx context.Context, id string) (*categorydomain.C
 	c := new(categorydomain.Category)
 
 	query := `
-		SELECT id, name, description 
+		SELECT id, name, description
 		FROM categories WHERE id = $1 LIMIT 1
 	`
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
@@ -88,13 +88,13 @@ func (r *repository) Update(ctx context.Context, input *categorydomain.Category)
 	sb.WriteString("UPDATE categories SET ")
 
 	if input.Name != "" {
-		sb.WriteString(fmt.Sprintf("name = $%d", idx))
+		sb.WriteString(fmt.Sprintf("name = $%d,", idx))
 		args = append(args, input.Name)
 		idx++
 	}
 
 	if input.Description != "" {
-		sb.WriteString(fmt.Sprintf("description = $%d", idx))
+		sb.WriteString(fmt.Sprintf(" description = $%d", idx))
 		args = append(args, input.Description)
 		idx++
 	}

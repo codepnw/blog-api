@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/codepnw/blog-api/internal/handlers"
@@ -56,10 +57,13 @@ func (m *AppMiddleware) RoleRequired(roles ...string) fiber.Handler {
 			return handlers.Unauthorized(ctx, "invalid user context")
 		}
 
-		for _, role := range roles {
-			if user.Role == role {
-				return ctx.Next()
-			}
+		// for _, role := range roles {
+		// 	if user.Role == role {
+		// 		return ctx.Next()
+		// 	}
+		// }
+		if slices.Contains(roles, user.Role) {
+			return ctx.Next()
 		}
 
 		return handlers.Forbidden(ctx, "no permissions")

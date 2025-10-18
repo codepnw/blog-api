@@ -1,9 +1,14 @@
 package posthandler
 
 import (
+	"errors"
+
 	postdomain "github.com/codepnw/blog-api/internal/domains/post"
 	"github.com/codepnw/blog-api/internal/handlers"
+	"github.com/codepnw/blog-api/internal/middleware"
 	postusecase "github.com/codepnw/blog-api/internal/usecases/post"
+	userusecase "github.com/codepnw/blog-api/internal/usecases/user"
+	"github.com/codepnw/blog-api/internal/utils/errs"
 	"github.com/codepnw/blog-api/internal/utils/validate"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,6 +22,11 @@ func NewPostHandler(uc postusecase.Usecase) *handler {
 }
 
 func (h *handler) Create(ctx *fiber.Ctx) error {
+	user, err := middleware.GetCurrentUser(ctx)
+	if err != nil {
+		return handlers.Unauthorized(ctx, err.Error())
+	}
+
 	req := new(PostCreateReq)
 	if err := ctx.BodyParser(req); err != nil {
 		return handlers.BadRequest(ctx, err.Error())
@@ -26,8 +36,7 @@ func (h *handler) Create(ctx *fiber.Ctx) error {
 	}
 
 	input := &postdomain.Post{
-		// TODO: Get AuthorID From Context Later
-		AuthorID:   "a9bbad43-51e5-424c-8ec5-5f40cd89b701",
+		AuthorID:   user.UserID,
 		Title:      req.Title,
 		Content:    req.Content,
 		CategoryID: &req.CategoryID,
@@ -52,7 +61,7 @@ func (h *handler) GetByID(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
-func (h *handler) GetByAuthorID(ctx *fiber.Ctx) error {
+func (h *handler) GetByUserID(ctx *fiber.Ctx) error {
 	authorID := ctx.Params(handlers.ParamKeyAuthorID)
 
 	result, err := h.uc.GetByAuthorID(ctx.Context(), authorID)
@@ -83,18 +92,22 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 		return handlers.BadRequest(ctx, err.Error())
 	}
 
-	input := new(postdomain.Post)
-	if req.Title != nil {
-		input.Title = *req.Title
+	ok, err := h.checkPermissions(ctx, postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrUserUnauthorized):
+			return handlers.Unauthorized(ctx, err.Error())
+		case errors.Is(err, errs.ErrPostNotFound):
+			return handlers.NotFound(ctx, err.Error())
+		default:
+			return handlers.InternalServerError(ctx, err)
+		}
 	}
-	if req.Content != nil {
-		input.Content = *req.Content
+	if !ok {
+		return handlers.Forbidden(ctx, "no permissions")
 	}
-	if req.CategoryID != nil {
-		input.CategoryID = req.CategoryID
-	}
-	input.ID = postID
 
+	input := h.validateUpdate(postID, req)
 	result, err := h.uc.Update(ctx.Context(), input)
 	if err != nil {
 		return handlers.InternalServerError(ctx, err)
@@ -106,9 +119,56 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 func (h *handler) Delete(ctx *fiber.Ctx) error {
 	postID := ctx.Params(handlers.ParamKeyPostID)
 
+	ok, err := h.checkPermissions(ctx, postID)
+	if err != nil {
+		switch {
+		case errors.Is(err, errs.ErrUserUnauthorized):
+			return handlers.Unauthorized(ctx, err.Error())
+		case errors.Is(err, errs.ErrPostNotFound):
+			return handlers.NotFound(ctx, err.Error())
+		default:
+			return handlers.InternalServerError(ctx, err)
+		}
+	}
+	if !ok {
+		return handlers.Forbidden(ctx, "no permissions")
+	}
+
 	if err := h.uc.Delete(ctx.Context(), postID); err != nil {
 		return handlers.InternalServerError(ctx, err)
 	}
-
 	return handlers.NoContent(ctx)
+}
+
+func (h *handler) validateUpdate(postID string, req *PostUpdateReq) *postdomain.Post {
+	newPost := new(postdomain.Post)
+	if req.Title != nil {
+		newPost.Title = *req.Title
+	}
+	if req.Content != nil {
+		newPost.Content = *req.Content
+	}
+	if req.CategoryID != nil {
+		newPost.CategoryID = req.CategoryID
+	}
+	newPost.ID = postID
+
+	return newPost
+}
+
+func (h *handler) checkPermissions(ctx *fiber.Ctx, postID string) (bool, error) {
+	user, err := middleware.GetCurrentUser(ctx)
+	if err != nil {
+		return false, errs.ErrUserUnauthorized
+	}
+
+	post, err := h.uc.GetByID(ctx.Context(), postID)
+	if err != nil {
+		return false, errs.ErrPostNotFound
+	}
+
+	if post.AuthorID == user.UserID || user.Role == string(userusecase.RoleAdmin) {
+		return true, nil
+	}
+	return false, nil
 }

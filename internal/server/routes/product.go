@@ -14,14 +14,22 @@ func (cfg *RouteConfig) PostRoutes() {
 	uc := postusecase.NewPostUsecase(repo)
 	handler := posthandler.NewPostHandler(uc)
 
-	r := cfg.APP.Group(cfg.Prefix + "/posts")
-	postID := fmt.Sprintf("/:%s", handlers.ParamKeyPostID)
-	authorID := fmt.Sprintf("/author/:%s", handlers.ParamKeyAuthorID)
+	var (
+		basePath     = fmt.Sprintf("%s/posts", cfg.Prefix)
+		postIDPath   = fmt.Sprintf("/:%s", handlers.ParamKeyPostID)
+		userPostPath = fmt.Sprintf("%s/users/:%s/posts", cfg.Prefix, handlers.ParamKeyAuthorID)
+	)
 
-	r.Post("/", handler.Create)
-	r.Get("/", handler.GetAll)
-	r.Get(postID, handler.GetByID)
-	r.Patch(postID, handler.Update)
-	r.Delete(postID, handler.Delete)
-	r.Get(authorID, handler.GetByAuthorID)
+	// Public
+	public := cfg.APP.Group(basePath)
+	public.Get("/", handler.GetAll)
+	public.Get(postIDPath, handler.GetByID)
+	// Get By UserID Path
+	cfg.APP.Get(userPostPath, handler.GetByUserID)
+
+	// Authorized
+	auth := cfg.APP.Group(cfg.Prefix+"/posts", cfg.Mid.Authorized())
+	auth.Post("/", handler.Create)
+	auth.Patch(postIDPath, handler.Update)
+	auth.Delete(postIDPath, handler.Delete)
 }

@@ -34,6 +34,12 @@ func Unauthorized(ctx *fiber.Ctx, message string) error {
 	})
 }
 
+func NotFound(ctx *fiber.Ctx, message string) error {
+	return ctx.Status(http.StatusNotFound).JSON(&fiber.Map{
+		"message": message,
+	})
+}
+
 func Forbidden(ctx *fiber.Ctx, message string) error {
 	return ctx.Status(http.StatusForbidden).JSON(&fiber.Map{
 		"message": message,

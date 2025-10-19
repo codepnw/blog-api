@@ -55,6 +55,7 @@ func Run(envPath string) error {
 	r.CategoryRoutes()
 	r.PostRoutes()
 	r.UserRoutes()
+	r.CommentRoutes()
 
 	return app.Listen(fmt.Sprintf(":%d", cfg.APP.Port))
 }

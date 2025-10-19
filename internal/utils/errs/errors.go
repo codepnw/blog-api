@@ -13,3 +13,10 @@ var (
 	ErrUserUnauthorized = errors.New("unauthorized")
 	ErrUserInvalid      = errors.New("invalid email or password")
 )
+
+// Comment
+var (
+	ErrCommentNotFound   = errors.New("comment not found")
+	ErrCommentIsRequired = errors.New("comment is required")
+	ErrCommentNotOwner   = errors.New("user not owner of comment")
+)

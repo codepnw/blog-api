@@ -5,4 +5,5 @@ const (
 	ParamKeyPostID     = "post_id"
 	ParamKeyAuthorID   = "author_id"
 	ParamKeyUserID     = "user_id"
+	ParamKeyCommentID  = "comment_id"
 )

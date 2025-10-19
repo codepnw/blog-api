@@ -15,8 +15,9 @@ type EnvConfig struct {
 }
 
 type APPConfig struct {
-	Port    int `env:"PORT" envDefault:"4000"`
-	Version int `env:"VERSION" envDefault:"1"`
+	Mode    string `env:"MODE" envDefault:"dev"`
+	Port    int    `env:"PORT" envDefault:"4000"`
+	Version int    `env:"VERSION" envDefault:"1"`
 }
 
 type DBConfig struct {

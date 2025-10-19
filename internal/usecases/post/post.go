@@ -6,6 +6,7 @@ import (
 
 	postdomain "github.com/codepnw/blog-api/internal/domains/post"
 	postrepo "github.com/codepnw/blog-api/internal/repositories/post"
+	"github.com/codepnw/blog-api/internal/utils/logger"
 )
 
 const contextTimeout = time.Second * 5
@@ -59,15 +60,11 @@ func (u *usecase) Update(ctx context.Context, input *postdomain.Post) (*postdoma
 	ctx, cancel := context.WithTimeout(ctx, contextTimeout)
 	defer cancel()
 
-	existing, err := u.repo.FindByID(ctx, input.ID)
+	_, err := u.repo.FindByID(ctx, input.ID)
 	if err != nil {
+		logger.Error("usecase.UpdatePost: find post", "id", input.ID, "error", err)
 		return nil, err
 	}
-	// if existing.AuthorID != input.AuthorID {
-	// 	return nil, errors.New("unauthorized to update this post")
-	// }
-	_ = existing
-
 	return u.repo.Update(ctx, input)
 }
 

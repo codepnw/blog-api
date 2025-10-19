@@ -8,6 +8,7 @@ import (
 	"github.com/codepnw/blog-api/internal/usecases"
 	"github.com/codepnw/blog-api/internal/utils/errs"
 	jwttoken "github.com/codepnw/blog-api/internal/utils/jwt"
+	"github.com/codepnw/blog-api/internal/utils/logger"
 	"github.com/codepnw/blog-api/internal/utils/password"
 )
 
@@ -48,6 +49,7 @@ func (u *usecase) CreateUser(ctx context.Context, input *userdomain.User) (*user
 
 	hashed, err := password.HashedPassword(input.PasswordHash)
 	if err != nil {
+		logger.Error("usecase.CreateUser: hash password", "error", err)
 		return nil, err
 	}
 
@@ -77,9 +79,11 @@ func (u *usecase) UpdateUser(ctx context.Context, input *userdomain.User) (*user
 
 	user, err := u.repo.FindByID(ctx, input.ID)
 	if err != nil {
+		logger.Error("usecase.UpdateUser: find user", "error", err)
 		return nil, err
 	}
 	if user.ID != input.ID {
+		logger.Error("usecase.UpdateUser: id not equal", "error", err)
 		return nil, errs.ErrUserUnauthorized
 	}
 
@@ -103,11 +107,13 @@ type AuthResponse struct {
 func (u *usecase) Register(ctx context.Context, input *userdomain.User) (*AuthResponse, error) {
 	user, err := u.CreateUser(ctx, input)
 	if err != nil {
+		logger.Error("usecase.Register: create user", "error", err)
 		return nil, err
 	}
 
 	response, err := u.tokenResponse(user)
 	if err != nil {
+		logger.Error("usecase.Register: token response", "error", err)
 		return nil, err
 	}
 	return response, nil
@@ -116,16 +122,19 @@ func (u *usecase) Register(ctx context.Context, input *userdomain.User) (*AuthRe
 func (u *usecase) Login(ctx context.Context, input *userdomain.User) (*AuthResponse, error) {
 	user, err := u.repo.FindByEmail(ctx, input.Email)
 	if err != nil {
+		logger.Error("usecase.Login: find user", "email", input.Email, "error", err)
 		return nil, errs.ErrUserInvalid
 	}
 
 	ok := password.VerifyPassword(input.PasswordHash, user.PasswordHash)
 	if !ok {
+		logger.Error("usecase.Login: verify password", "password", input.PasswordHash, "password_hash", user.PasswordHash)
 		return nil, errs.ErrUserInvalid
 	}
 
 	response, err := u.tokenResponse(user)
 	if err != nil {
+		logger.Error("usecase.Register: token response", "error", err)
 		return nil, err
 	}
 	return response, nil
@@ -134,11 +143,13 @@ func (u *usecase) Login(ctx context.Context, input *userdomain.User) (*AuthRespo
 func (u *usecase) tokenResponse(user *userdomain.User) (*AuthResponse, error) {
 	accessToken, err := u.token.GenerateAccessToken(user)
 	if err != nil {
+		logger.Error("usecase.tokenResponse: access token", "access_token", accessToken, "error", err)
 		return nil, err
 	}
 
 	refreshToken, err := u.token.GenerateRefreshToken(user)
 	if err != nil {
+		logger.Error("usecase.tokenResponse: refresh token", "refresh_token", refreshToken, "error", err)
 		return nil, err
 	}
 

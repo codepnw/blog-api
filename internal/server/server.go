@@ -8,6 +8,7 @@ import (
 	"github.com/codepnw/blog-api/internal/middleware"
 	"github.com/codepnw/blog-api/internal/server/routes"
 	jwttoken "github.com/codepnw/blog-api/internal/utils/jwt"
+	"github.com/codepnw/blog-api/internal/utils/logger"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,22 +19,28 @@ func Run(envPath string) error {
 		return err
 	}
 
+	// Logger
+	logger.Init(cfg.APP.Mode)
+
 	// Connect Database
 	db, err := database.ConnectPostgres(cfg)
 	if err != nil {
-		return fmt.Errorf("connect database failed: %w", err)
+		logger.Error("server.Run: connect database", "error", err)
+		return fmt.Errorf("connect database failed")
 	}
 	defer db.Close()
 
 	// Init JWT Token
 	token, err := jwttoken.InitJWT(cfg)
 	if err != nil {
+		logger.Error("server.Run: jwt init", "error", err)
 		return err
 	}
 
 	// Init Middleware
 	mid, err := middleware.InitMiddleware(token)
 	if err != nil {
+		logger.Error("server.Run: middleware init", "error", err)
 		return err
 	}
 
@@ -49,6 +56,7 @@ func Run(envPath string) error {
 	}
 	r, err := routes.RegisterRoutes(routesConfig)
 	if err != nil {
+		logger.Error("server.Run: register routes", "error", err)
 		return err
 	}
 	// Init Routes
@@ -57,5 +65,12 @@ func Run(envPath string) error {
 	r.UserRoutes()
 	r.CommentRoutes()
 
-	return app.Listen(fmt.Sprintf(":%d", cfg.APP.Port))
+	port := fmt.Sprintf(":%d", cfg.APP.Port)
+	logger.Info(fmt.Sprintf("server running at port %s", port))
+
+	if err := app.Listen(port); err != nil {
+		logger.Error("server.Run: app listen", "error", err)
+		return err
+	}
+	return nil
 }

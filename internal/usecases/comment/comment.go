@@ -10,6 +10,7 @@ import (
 	postusecase "github.com/codepnw/blog-api/internal/usecases/post"
 	userusecase "github.com/codepnw/blog-api/internal/usecases/user"
 	"github.com/codepnw/blog-api/internal/utils/errs"
+	"github.com/codepnw/blog-api/internal/utils/logger"
 )
 
 type Usecase interface {
@@ -55,6 +56,7 @@ func (u *usecase) EditComment(ctx context.Context, input *commentdomain.Comment,
 	defer cancel()
 
 	if err := u.validateOwner(ctx, input.ID, input.UserID, role); err != nil {
+		logger.Error("usecase.EditComment: validate owner", "id", input.ID, "user_id", input.UserID, "role", role, "error", err)
 		return nil, err
 	}
 
@@ -69,6 +71,7 @@ func (u *usecase) DeleteComment(ctx context.Context, commentID int64, userID, ro
 	defer cancel()
 
 	if err := u.validateOwner(ctx, commentID, userID, role); err != nil {
+		logger.Error("usecase.DeleteComment: validate owner", "id", commentID, "user_id", userID, "role", role, "error", err)
 		return err
 	}
 	return u.repo.Delete(ctx, commentID)
@@ -77,11 +80,13 @@ func (u *usecase) DeleteComment(ctx context.Context, commentID int64, userID, ro
 func (u *usecase) validateComment(ctx context.Context, input *commentdomain.Comment) error {
 	_, err := u.post.GetByID(ctx, input.PostID)
 	if err != nil {
+		logger.Error("usecase.validateComment: get post", "id", input.PostID, "error", err)
 		return err
 	}
 
 	_, err = u.user.GetUser(ctx, input.UserID)
 	if err != nil {
+		logger.Error("usecase.validateComment: get user", "id", input.UserID, "error", err)
 		return err
 	}
 

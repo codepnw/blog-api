@@ -63,6 +63,69 @@ definitions:
       title:
         type: string
     type: object
+  userdomain.User:
+    properties:
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      passwordHash:
+        type: string
+      role:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  userhandler.UserCreateReq:
+    properties:
+      email:
+        type: string
+      first_name:
+        minLength: 3
+        type: string
+      last_name:
+        minLength: 3
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  userhandler.UserLoginReq:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  userhandler.UserUpdateReq:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+    type: object
+  userusecase.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
 host: localhost:4000
 info:
   contact: {}
@@ -70,6 +133,64 @@ info:
   title: Blog API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/userhandler.UserLoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userusecase.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Auth Login
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Register data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/userhandler.UserCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/userusecase.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Auth Register
+      tags:
+      - auth
   /posts:
     get:
       consumes:
@@ -81,7 +202,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/postdomain.Post'
+              items:
+                $ref: '#/definitions/postdomain.Post'
+              type: array
             type: array
         "500":
           description: Internal Server Error
@@ -226,6 +349,158 @@ paths:
       summary: Edit Post
       tags:
       - posts
+  /users:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/userdomain.User'
+              type: array
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Get All User
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/userhandler.UserCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/userdomain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Create User
+      tags:
+      - users
+  /users/{user_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userdomain.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userdomain.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Get User ID
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: User data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/userhandler.UserUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userdomain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Update User
+      tags:
+      - users
   /users/{user_id}/posts:
     get:
       consumes:
@@ -243,7 +518,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/postdomain.Post'
+              items:
+                $ref: '#/definitions/postdomain.Post'
+              type: array
             type: array
         "500":
           description: Internal Server Error
@@ -252,4 +529,33 @@ paths:
       summary: Get Post By User
       tags:
       - posts
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/userdomain.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Get Profile User
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

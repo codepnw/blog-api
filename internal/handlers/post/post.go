@@ -91,7 +91,7 @@ func (h *handler) GetByID(ctx *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param user_id path string true "User ID"
-// @Success 200 {object} []postdomain.Post
+// @Success 200 {array} []postdomain.Post
 // @Failure 500 {object} handlers.InternalServerErrRes
 // @Router /users/{user_id}/posts [get]
 func (h *handler) GetByUserID(ctx *fiber.Ctx) error {
@@ -110,7 +110,7 @@ func (h *handler) GetByUserID(ctx *fiber.Ctx) error {
 // @Tags posts
 // @Accept json
 // @Produce json
-// @Success 200 {object} []postdomain.Post
+// @Success 200 {array} []postdomain.Post
 // @Failure 500 {object} handlers.InternalServerErrRes
 // @Router /posts [get]
 func (h *handler) GetAll(ctx *fiber.Ctx) error {

@@ -8,6 +8,10 @@ import (
 
 const envPath = "dev.env"
 
+// @title Blog API
+// @version 1.0
+// @description Clean Architecture Blog API
+// @host localhost:4000
 func main() {
 	if err := server.Run(envPath); err != nil {
 		log.Fatal(err)

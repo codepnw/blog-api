@@ -6,6 +6,32 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// -------------- Swagger Response --------------
+
+type EmptyRes struct{}
+
+type BadRequestRes struct {
+	Message string `json:"message"`
+}
+
+type UnauthorizedRes struct {
+	Message string `json:"message"`
+}
+
+type NotFoundRes struct {
+	Message string `json:"message"`
+}
+
+type ForbiddenRes struct {
+	Message string `json:"message"`
+}
+
+type InternalServerErrRes struct {
+	Error string `json:"error"`
+}
+
+// -------------- JSON Response --------------
+
 func Success(ctx *fiber.Ctx, data any) error {
 	return ctx.Status(http.StatusOK).JSON(&fiber.Map{
 		"data": data,

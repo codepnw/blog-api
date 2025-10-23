@@ -21,6 +21,17 @@ func NewPostHandler(uc postusecase.Usecase) *handler {
 	return &handler{uc: uc}
 }
 
+// Create Post
+// @Summary Create Post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param data body posthandler.PostCreateReq true "Post data"
+// @Success 201 {object} postdomain.Post
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts [post]
 func (h *handler) Create(ctx *fiber.Ctx) error {
 	user, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
@@ -50,17 +61,39 @@ func (h *handler) Create(ctx *fiber.Ctx) error {
 	return handlers.Created(ctx, result)
 }
 
+// Get Post By ID
+// @Summary Get Post By ID
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param post_id path string true "Post ID"
+// @Success 200 {object} postdomain.Post
+// @Failure 404 {object} handlers.NotFoundRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts/{post_id} [get]
 func (h *handler) GetByID(ctx *fiber.Ctx) error {
 	postID := ctx.Params(handlers.ParamKeyPostID)
 
 	result, err := h.uc.GetByID(ctx.Context(), postID)
 	if err != nil {
+		if errors.Is(err, errs.ErrPostNotFound) {
+			return handlers.NotFound(ctx, err.Error())
+		}
 		return handlers.InternalServerError(ctx, err)
 	}
 
 	return handlers.Success(ctx, result)
 }
 
+// Get Post By User
+// @Summary Get Post By User
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param user_id path string true "User ID"
+// @Success 200 {object} []postdomain.Post
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /users/{user_id}/posts [get]
 func (h *handler) GetByUserID(ctx *fiber.Ctx) error {
 	authorID := ctx.Params(handlers.ParamKeyAuthorID)
 
@@ -72,6 +105,14 @@ func (h *handler) GetByUserID(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Get Posts
+// @Summary Get Posts
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Success 200 {object} []postdomain.Post
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts [get]
 func (h *handler) GetAll(ctx *fiber.Ctx) error {
 	result, err := h.uc.GetAll(ctx.Context())
 	if err != nil {
@@ -81,6 +122,19 @@ func (h *handler) GetAll(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Edit Post
+// @Summary Edit Post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param post_id path string true "Post ID"
+// @Param data body posthandler.PostUpdateReq true "Post data"
+// @Success 200 {object} postdomain.Post
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 404 {object} handlers.NotFoundRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts/{post_id} [patch]
 func (h *handler) Update(ctx *fiber.Ctx) error {
 	postID := ctx.Params(handlers.ParamKeyPostID)
 
@@ -116,6 +170,18 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Delete Post
+// @Summary Delete Post
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param post_id path string true "Post ID"
+// @Success 204 {object} handlers.EmptyRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 404 {object} handlers.NotFoundRes
+// @Failure 403 {object} handlers.ForbiddenRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts/{post_id} [delete]
 func (h *handler) Delete(ctx *fiber.Ctx) error {
 	postID := ctx.Params(handlers.ParamKeyPostID)
 

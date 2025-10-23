@@ -1,0 +1,255 @@
+definitions:
+  handlers.BadRequestRes:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.EmptyRes:
+    type: object
+  handlers.ForbiddenRes:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.InternalServerErrRes:
+    properties:
+      error:
+        type: string
+    type: object
+  handlers.NotFoundRes:
+    properties:
+      message:
+        type: string
+    type: object
+  handlers.UnauthorizedRes:
+    properties:
+      message:
+        type: string
+    type: object
+  postdomain.Post:
+    properties:
+      authorID:
+        type: string
+      categoryID:
+        type: string
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  posthandler.PostCreateReq:
+    properties:
+      category_id:
+        type: string
+      content:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  posthandler.PostUpdateReq:
+    properties:
+      category_id:
+        type: string
+      content:
+        type: string
+      title:
+        type: string
+    type: object
+host: localhost:4000
+info:
+  contact: {}
+  description: Clean Architecture Blog API
+  title: Blog API
+  version: "1.0"
+paths:
+  /posts:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/postdomain.Post'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Get Posts
+      tags:
+      - posts
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/posthandler.PostCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/postdomain.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Create Post
+      tags:
+      - posts
+  /posts/{post_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handlers.EmptyRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handlers.ForbiddenRes'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Delete Post
+      tags:
+      - posts
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/postdomain.Post'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Get Post By ID
+      tags:
+      - posts
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Post data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/posthandler.PostUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/postdomain.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handlers.NotFoundRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Edit Post
+      tags:
+      - posts
+  /users/{user_id}/posts:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/postdomain.Post'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Get Post By User
+      tags:
+      - posts
+swagger: "2.0"

@@ -12,6 +12,9 @@ const envPath = "dev.env"
 // @version 1.0
 // @description Clean Architecture Blog API
 // @host localhost:4000
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	if err := server.Run(envPath); err != nil {
 		log.Fatal(err)

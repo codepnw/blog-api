@@ -26,8 +26,14 @@ func RegisterRoutes(cfg *RouteConfig) (*RouteConfig, error) {
 		return nil, errors.New("required: prefix, app, db, token")
 	}
 
+	// Save Token in Local storage
+	// Disable if production mode
+	saveToken := true
+
 	docs.SwaggerInfo.BasePath = cfg.Prefix
-	cfg.APP.Get(cfg.Prefix+"/swagger/*", fiberSwagger.HandlerDefault)
+	cfg.APP.Get(cfg.Prefix+"/swagger/*", fiberSwagger.New(fiberSwagger.Config{
+		PersistAuthorization: saveToken,
+	}))
 
 	return cfg, nil
 }

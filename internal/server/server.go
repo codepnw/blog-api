@@ -10,6 +10,7 @@ import (
 	jwttoken "github.com/codepnw/blog-api/internal/utils/jwt"
 	"github.com/codepnw/blog-api/internal/utils/logger"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func Run(envPath string) error {
@@ -45,6 +46,12 @@ func Run(envPath string) error {
 	}
 
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
+	}))
 
 	// Register Routes
 	routesConfig := &routes.RouteConfig{

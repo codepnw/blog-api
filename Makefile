@@ -15,8 +15,12 @@ migrate-create:
 migrate-up:
 	@migrate -database $(MIGRATE_DB) -path $(MIGRATE_DIR) up
 
-migrate-down:	
+migrate-down:
 	@migrate -database $(MIGRATE_DB) -path $(MIGRATE_DIR) down 1
+
+# ----------- SWAGGER -----------
+swag-init:
+	@swag init -g cmd/main.go -o internal/handlers/docs
 
 # ----------- FEATURE MANAGE -----------
 ft-new:

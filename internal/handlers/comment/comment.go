@@ -19,6 +19,19 @@ func NewCommentHandler(uc commentusecase.Usecase) *handler {
 	return &handler{uc: uc}
 }
 
+// Create Comment
+// @Summary Create Comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param post_id path string true "Post ID"
+// @Param data body commenthandler.CommentReq true "New comment"
+// @Success 201 {object} commentdomain.Comment
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts{post_id}/comments [post]
 func (h *handler) CreateComment(ctx *fiber.Ctx) error {
 	user, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
@@ -47,6 +60,14 @@ func (h *handler) CreateComment(ctx *fiber.Ctx) error {
 	return handlers.Created(ctx, result)
 }
 
+// Get Comment By Post
+// @Summary Get Comment By Post
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Success 200 {object} []commentdomain.Comment
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts{post_id}/comments [get]
 func (h *handler) GetCommentByPost(ctx *fiber.Ctx) error {
 	postID := ctx.Params(handlers.ParamKeyPostID)
 
@@ -57,6 +78,20 @@ func (h *handler) GetCommentByPost(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Edit Comment
+// @Summary Edit Comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param post_id path string true "Post ID"
+// @Param comment_id path string true "Comment ID"
+// @Param data body commenthandler.CommentReq true "New comment"
+// @Success 200 {object} commentdomain.Comment
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts{post_id}/comments/{comment_id} [patch]
 func (h *handler) EditComment(ctx *fiber.Ctx) error {
 	user, err := middleware.GetCurrentUser(ctx)
 	if err != nil {
@@ -87,6 +122,18 @@ func (h *handler) EditComment(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Delete Comment
+// @Summary Delete Comment
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param post_id path string true "Post ID"
+// @Param comment_id path string true "Comment ID"
+// @Success 204 {object} handlers.EmptyRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /posts{post_id}/comments/{comment_id} [delete]
 func (h *handler) DeleteComment(ctx *fiber.Ctx) error {
 	user, err := middleware.GetCurrentUser(ctx)
 	if err != nil {

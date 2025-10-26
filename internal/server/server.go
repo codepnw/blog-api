@@ -48,6 +48,7 @@ func Run(envPath string) error {
 
 	// Register Routes
 	routesConfig := &routes.RouteConfig{
+		Mode:   cfg.APP.Mode,
 		Prefix: fmt.Sprintf("/api/v%d", cfg.APP.Version),
 		APP:    app,
 		DB:     db,
@@ -66,7 +67,9 @@ func Run(envPath string) error {
 	r.CommentRoutes()
 
 	port := fmt.Sprintf(":%d", cfg.APP.Port)
-	logger.Info(fmt.Sprintf("server running at port %s", port))
+	url := fmt.Sprintf("%s%s%s", cfg.APP.Host, port, routesConfig.Prefix)
+	logger.Info(fmt.Sprintf("server running at %s", url))
+	logger.Info(fmt.Sprintf("api docs at %s/docs", url))
 
 	if err := app.Listen(port); err != nil {
 		logger.Error("server.Run: app listen", "error", err)

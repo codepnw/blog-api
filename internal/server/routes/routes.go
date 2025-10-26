@@ -14,6 +14,7 @@ import (
 )
 
 type RouteConfig struct {
+	Mode   string                    `validate:"required"`
 	Prefix string                    `validate:"required"`
 	APP    *fiber.App                `validate:"required"`
 	DB     *sql.DB                   `validate:"required"`
@@ -23,15 +24,20 @@ type RouteConfig struct {
 
 func RegisterRoutes(cfg *RouteConfig) (*RouteConfig, error) {
 	if err := validate.Struct(cfg); err != nil {
-		return nil, errors.New("required: prefix, app, db, token")
+		return nil, errors.New("all fields required")
 	}
 
 	// Save Token in Local storage
-	// Disable if production mode
-	saveToken := true
+	var saveToken bool
+	switch cfg.Mode {
+	case "prod", "production":
+		saveToken = false
+	default:
+		saveToken = true
+	}
 
 	docs.SwaggerInfo.BasePath = cfg.Prefix
-	cfg.APP.Get(cfg.Prefix+"/swagger/*", fiberSwagger.New(fiberSwagger.Config{
+	cfg.APP.Get(cfg.Prefix+"/docs/*", fiberSwagger.New(fiberSwagger.Config{
 		PersistAuthorization: saveToken,
 	}))
 

@@ -26,6 +26,7 @@ func NewPostHandler(uc postusecase.Usecase) *handler {
 // @Tags posts
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param data body posthandler.PostCreateReq true "Post data"
 // @Success 201 {object} postdomain.Post
 // @Failure 400 {object} handlers.BadRequestRes
@@ -127,6 +128,7 @@ func (h *handler) GetAll(ctx *fiber.Ctx) error {
 // @Tags posts
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param post_id path string true "Post ID"
 // @Param data body posthandler.PostUpdateReq true "Post data"
 // @Success 200 {object} postdomain.Post
@@ -175,6 +177,7 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 // @Tags posts
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param post_id path string true "Post ID"
 // @Success 204 {object} handlers.EmptyRes
 // @Failure 401 {object} handlers.UnauthorizedRes

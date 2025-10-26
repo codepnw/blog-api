@@ -16,6 +16,18 @@ func NewCategoryHandler(uc categoryusecase.Usecase) *handler {
 	return &handler{uc: uc}
 }
 
+// Create Category
+// @Summary Create Category
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param data body categoryhandler.CategoryCreateReq true "New category"
+// @Success 201 {object} categorydomain.Category
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /categories [post]
 func (h *handler) Create(ctx *fiber.Ctx) error {
 	req := new(CategoryCreateReq)
 	if err := ctx.BodyParser(req); err != nil {
@@ -36,6 +48,17 @@ func (h *handler) Create(ctx *fiber.Ctx) error {
 	return handlers.Created(ctx, "added new category")
 }
 
+// Get Category
+// @Summary Get Category
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param category_id path string true "Category ID"
+// @Success 200 {object} categorydomain.Category
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /categories/category_id [get]
 func (h *handler) GetByID(ctx *fiber.Ctx) error {
 	id := ctx.Params(handlers.ParamKeyCategoryID)
 
@@ -46,6 +69,16 @@ func (h *handler) GetByID(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Create Categories
+// @Summary Create Categories
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} []categorydomain.Category
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /categories [get]
 func (h *handler) GetAll(ctx *fiber.Ctx) error {
 	result, err := h.uc.GetAll(ctx.Context())
 	if err != nil {
@@ -54,6 +87,19 @@ func (h *handler) GetAll(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, result)
 }
 
+// Update Category
+// @Summary Update Category
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param category_id path string true "Category ID"
+// @Param data body categoryhandler.CategoryUpdateReq true "New category"
+// @Success 200 {object} categorydomain.Category
+// @Failure 400 {object} handlers.BadRequestRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /categories/category_id [patch]
 func (h *handler) Update(ctx *fiber.Ctx) error {
 	id := ctx.Params(handlers.ParamKeyCategoryID)
 
@@ -81,6 +127,17 @@ func (h *handler) Update(ctx *fiber.Ctx) error {
 	return handlers.Success(ctx, "category updated")
 }
 
+// Delete Category
+// @Summary Delete Category
+// @Tags categories
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param category_id path string true "Category ID"
+// @Success 204 {object} handlers.EmptyRes
+// @Failure 401 {object} handlers.UnauthorizedRes
+// @Failure 500 {object} handlers.InternalServerErrRes
+// @Router /categories/category_id [delete]
 func (h *handler) Delete(ctx *fiber.Ctx) error {
 	id := ctx.Params(handlers.ParamKeyCategoryID)
 

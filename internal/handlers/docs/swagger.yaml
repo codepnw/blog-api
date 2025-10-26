@@ -1,4 +1,51 @@
 definitions:
+  categorydomain.Category:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  categoryhandler.CategoryCreateReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  categoryhandler.CategoryUpdateReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  commentdomain.Comment:
+    properties:
+      content:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      postID:
+        type: string
+      updatedAt:
+        type: string
+      userID:
+        type: string
+    type: object
+  commenthandler.CommentReq:
+    properties:
+      content:
+        type: string
+    required:
+    - content
+    type: object
   handlers.BadRequestRes:
     properties:
       message:
@@ -191,6 +238,164 @@ paths:
       summary: Auth Register
       tags:
       - auth
+  /categories:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/categorydomain.Category'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Create Categories
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: New category
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/categoryhandler.CategoryCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/categorydomain.Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Create Category
+      tags:
+      - categories
+  /categories/category_id:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handlers.EmptyRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Delete Category
+      tags:
+      - categories
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/categorydomain.Category'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Get Category
+      tags:
+      - categories
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        in: path
+        name: category_id
+        required: true
+        type: string
+      - description: New category
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/categoryhandler.CategoryUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/categorydomain.Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Update Category
+      tags:
+      - categories
   /posts:
     get:
       consumes:
@@ -242,6 +447,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
       summary: Create Post
       tags:
       - posts
@@ -278,6 +485,8 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
       summary: Delete Post
       tags:
       - posts
@@ -346,9 +555,149 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
       summary: Edit Post
       tags:
       - posts
+  /posts{post_id}/comments:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/commentdomain.Comment'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      summary: Get Comment By Post
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: New comment
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/commenthandler.CommentReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/commentdomain.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Create Comment
+      tags:
+      - comments
+  /posts{post_id}/comments/{comment_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/handlers.EmptyRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Delete Comment
+      tags:
+      - comments
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: New comment
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/commenthandler.CommentReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/commentdomain.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.BadRequestRes'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.UnauthorizedRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.InternalServerErrRes'
+      security:
+      - BearerAuth: []
+      summary: Edit Comment
+      tags:
+      - comments
   /users:
     get:
       consumes:

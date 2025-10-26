@@ -16,6 +16,7 @@ type EnvConfig struct {
 
 type APPConfig struct {
 	Mode    string `env:"MODE" envDefault:"dev"`
+	Host    string `env:"HOST" envDefault:"127.0.0.1"`
 	Port    int    `env:"PORT" envDefault:"4000"`
 	Version int    `env:"VERSION" envDefault:"1"`
 }

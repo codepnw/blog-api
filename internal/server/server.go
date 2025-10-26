@@ -47,10 +47,9 @@ func Run(envPath string) error {
 
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowCredentials: true,
+		AllowOrigins: "*",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 	}))
 
 	// Register Routes

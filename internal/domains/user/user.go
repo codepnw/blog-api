@@ -3,12 +3,12 @@ package userdomain
 import "time"
 
 type User struct {
-	ID           string
-	FirstName    string
-	LastName     string
-	Email        string
-	PasswordHash string
-	Role         string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           string    `json:"id"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"-"`
+	Role         string    `json:"role"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
